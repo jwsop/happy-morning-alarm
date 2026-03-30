@@ -150,7 +150,7 @@ export default function NeuroMorningApp() {
       <header className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Smile className="h-8 w-8 text-green-600" />
-          <h1 className="text-3xl font-bold tracking-tighter">해피모닝 리츄얼</h1>
+          <h1 className="text-3xl font-bold tracking-tighter">Happy Morning Ritual</h1>
         </div>
         <div className="text-xl font-mono font-semibold text-stone-600">
           {currentTime}

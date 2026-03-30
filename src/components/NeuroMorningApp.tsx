@@ -1,14 +1,66 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { GoogleGenAI } from '@google/genai';
 import ReactMarkdown from 'react-markdown';
 import { Play, Pause, Upload, Clock, Smile } from 'lucide-react';
 
+const quotes = [
+  "Your day will shine as bright as your voice.",
+  "Cheering for your new beginning.",
+  "You are doing great.",
+  "Your smile lights up the world today.",
+  "Today will be happier than yesterday.",
+  "You are a precious person.",
+  "Wishing you a day full of good things.",
+  "Take one more step toward your dreams.",
+  "May your day be peaceful.",
+  "You are stronger than you think.",
+  "Cheering for your passion today.",
+  "You are growing every single day.",
+  "May your day be filled with joy.",
+  "Your existence itself is a gift.",
+  "Your efforts will shine today.",
+  "You deserve to be loved.",
+  "May your day shine beautifully.",
+  "Your dreams will surely come true.",
+  "May your heart be at ease today.",
+  "You are a special person.",
+  "May your day be vibrant.",
+  "Cheering for your challenges.",
+  "May your laughter never end today.",
+  "You are deeply loved.",
+  "May your day be filled with happiness.",
+  "Your future is bright.",
+  "May all your work go well today.",
+  "You are always a wonderful person.",
+  "May your day be blessed.",
+  "Never give up on your dreams.",
+  "May your heart be warm today.",
+  "You are a precious being.",
+  "May your day be enjoyable.",
+  "I believe in your efforts.",
+  "May every moment of your day be precious.",
+  "You are always a shining person.",
+  "May your day be peaceful.",
+  "Move forward toward your dreams.",
+  "May you feel good today.",
+  "You have special abilities.",
+  "May your day be successful.",
+  "I believe in your passion.",
+  "May all your wishes come true today.",
+  "You are always a beautiful person.",
+  "May your day be energetic.",
+  "Cheering for your dreams.",
+  "May your heart be calm today.",
+  "You are a person of great value.",
+  "May your day be happy.",
+  "Cheering for your future."
+];
+
 export default function NeuroMorningApp() {
+  const [name, setName] = useState(localStorage.getItem('userName') || '');
+  const [streak, setStreak] = useState(parseInt(localStorage.getItem('streak') || '0'));
+  const [totalCount, setTotalCount] = useState(parseInt(localStorage.getItem('totalCount') || '0'));
   const [alarmTime, setAlarmTime] = useState('');
   const [currentTime, setCurrentTime] = useState('');
-  const [age, setAge] = useState('');
-  const [style, setStyle] = useState('Energetic');
-  const [language, setLanguage] = useState('Korean');
   const [message, setMessage] = useState('');
   const [musicFile, setMusicFile] = useState<File | null>(null);
   const [musicUrl, setMusicUrl] = useState('');
@@ -17,15 +69,45 @@ export default function NeuroMorningApp() {
   const [isAlarmTriggered, setIsAlarmTriggered] = useState(false);
   const [isArmed, setIsArmed] = useState(false);
 
-  const generatePostcard = async () => {
-    const aiText = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-    const prompt = `Act as Angelina, a supportive friend who is always cheering for the user. Create a single, short, and empowering quote for a ${age}-year-old person who prefers a ${style} style to start their day. The quote should be designed to make the user feel happy and energized. Write the quote in ${language}. Use markdown.`;
-    const textResponse = await aiText.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-    });
-    const text = textResponse.text || '';
-    setMessage(text);
+  useEffect(() => {
+    localStorage.setItem('userName', name);
+  }, [name]);
+
+  const updateStats = () => {
+    const today = new Date().toDateString();
+    const lastUsed = localStorage.getItem('lastUsedDate');
+
+    if (today === lastUsed) return;
+
+    let newStreak = streak;
+    if (lastUsed === new Date(Date.now() - 86400000).toDateString()) {
+      newStreak += 1;
+    } else {
+      newStreak = 1;
+    }
+
+    const newTotal = totalCount + 1;
+    setStreak(newStreak);
+    setTotalCount(newTotal);
+    localStorage.setItem('streak', newStreak.toString());
+    localStorage.setItem('totalCount', newTotal.toString());
+    localStorage.setItem('lastUsedDate', today);
+  };
+
+  const generatePostcard = () => {
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    setMessage(randomQuote);
+    updateStats();
+  };
+
+  const handleShare = () => {
+    const text = `${name ? `${name}, ` : ''}${message}`;
+    if (navigator.share) {
+      navigator.share({ title: 'Happy Morning Alarm', text });
+    } else {
+      navigator.clipboard.writeText(text);
+      alert('Copied to clipboard!');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,19 +150,35 @@ export default function NeuroMorningApp() {
       <header className="mb-8 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Smile className="h-8 w-8 text-green-600" />
-          <h1 className="text-3xl font-bold tracking-tighter">해피 모닝 알람</h1>
+          <h1 className="text-3xl font-bold tracking-tighter">Happy Morning Ritual</h1>
         </div>
         <div className="text-xl font-mono font-semibold text-stone-600">
-          Current Time: {currentTime}
+          {currentTime}
         </div>
       </header>
+
+      <div className="mb-8 rounded-2xl bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center gap-4">
+          <input
+            type="text"
+            placeholder="Enter your name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="rounded-lg border-2 border-stone-200 p-2"
+          />
+          <div className="flex gap-4 text-sm font-semibold text-stone-600">
+            <span>🔥 Streak: {streak} days</span>
+            <span>✨ Total: {totalCount} times</span>
+          </div>
+        </div>
+      </div>
 
       {/* Removed API Key check UI */}
 
       <div className="grid gap-8 md:grid-cols-2">
         <div className="rounded-2xl bg-white p-6 shadow-sm">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold">
-            <Clock className="h-5 w-5" /> Alarm Settings
+            <Clock className="h-5 w-5" /> Morning Settings
           </h2>
           <div className="space-y-4">
             <div>
@@ -91,41 +189,6 @@ export default function NeuroMorningApp() {
                 onChange={(e) => setAlarmTime(e.target.value)}
                 className="w-full rounded-lg border-2 border-blue-500 p-2"
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-green-600">Age</label>
-              <input
-                type="number"
-                placeholder="Age"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className="w-full rounded-lg border-2 border-green-500 p-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-blue-600">Style</label>
-              <select
-                value={style}
-                onChange={(e) => setStyle(e.target.value)}
-                className="w-full rounded-lg border-2 border-blue-500 p-2"
-              >
-                <option>Energetic</option>
-                <option>Calm</option>
-                <option>Reflective</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600">Language</label>
-              <select
-                value={language}
-                onChange={(e) => setLanguage(e.target.value)}
-                className="w-full rounded-lg border-2 border-gray-500 p-2"
-              >
-                <option>Korean</option>
-                <option>English</option>
-                <option>Japanese</option>
-                <option>Chinese</option>
-              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-yellow-600">Music</label>
@@ -141,19 +204,27 @@ export default function NeuroMorningApp() {
                 isArmed ? 'bg-red-600 hover:bg-red-700' : 'bg-orange-600 hover:bg-orange-700'
               }`}
             >
-              {isArmed ? 'Deactivate Alarm' : 'Activate Alarm'}
+              {isArmed ? 'Stop Morning' : 'Start Morning'}
             </button>
-            {isArmed && <p className="text-sm text-green-600">Alarm is armed and waiting...</p>}
+            {isArmed && <p className="text-sm text-green-600">Morning ritual is armed and waiting...</p>}
           </div>
         </div>
 
         {isAlarmTriggered && (
           <div className="rounded-2xl bg-orange-50 p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-semibold text-orange-900">Angelina's Message</h2>
+            <h2 className="mb-4 text-xl font-semibold text-orange-900">
+              {name ? `${name}, ` : ''}Angelina's Message
+            </h2>
             <div className="mx-auto max-w-sm rounded-lg border-8 border-white bg-white p-4 shadow-xl">
               <div className="prose prose-orange">
                 <ReactMarkdown>{message}</ReactMarkdown>
               </div>
+              <button
+                onClick={handleShare}
+                className="mt-4 w-full rounded-lg bg-green-600 px-4 py-2 text-white hover:bg-green-700"
+              >
+                Share This Message
+              </button>
             </div>
             {musicUrl && (
               <div className="mt-6 flex flex-col items-center gap-4">
@@ -177,7 +248,7 @@ export default function NeuroMorningApp() {
                     }}
                     className="rounded-lg bg-stone-200 px-4 py-2 hover:bg-stone-300"
                   >
-                    Stop Alarm
+                    Stop Ritual
                   </button>
                 )}
               </div>
